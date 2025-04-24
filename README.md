@@ -13,30 +13,113 @@ This software simulates water diffusion in complex tissue environments using a M
 
 The simulation generates realistic diffusion MRI signals by tracking the phase accumulation of particles as they diffuse through the substrate during an MRI sequence.
 
+## Quick Start with Docker
+
+The simulation can be run easily using Docker, which handles all dependencies automatically. For some operations, you may need to use two terminals.
+
+### Step 1: Build the Docker Image
+
+Open your first terminal:
+
+```bash
+# Clone the repository (if you haven't already)
+git clone https://github.com/yourusername/MCRW-Simulation.git
+cd MCRW-Simulation
+
+# Build the Docker image
+docker build -t mcrw .
+```
+
+### Step 2: Run the Container in Two Terminals
+
+#### Terminal 1: Run the Simulation Container
+
+```bash
+# Run the container with mounted volume for simulation
+docker run -it --name mcrw-simulation-container -v $(pwd):/app mcrw
+```
+
+Inside this terminal, you'll compile and run the simulation:
+
+```bash
+# Create build directory
+mkdir -p build/Release && cd build/Release
+
+# Configure with CMake
+cmake ../..
+
+# Compile
+make -j$(nproc)
+
+# Run the simulation
+./3DRandomwalk
+```
+
+## Using the SimulationRunner Class
+
+The `SimulationRunner` class provides a simplified interface to run the simulation. The basic workflow is:
+
+1. **Initialize**: Create a SimulationRunner instance with the number of particles, random seed, and strain function.
+2. **Setup Sequence**: Load MRI sequence parameters from a YAML file.
+3. **Setup Geometry**: Load tissue geometry from either MAT or OFF files.
+4. **Run Simulation**: Configure simulation parameters and execute.
+
+Example code:
+
+```cpp
+// Initialize SimulationRunner
+int N_PARTICLES = 10000;
+int SEED = 1;
+std::function<double(double)> strain_function = [](double t) { return 0.0; };
+auto runner = SimulationRunner(N_PARTICLES, SEED, strain_function);
+
+// Setup sequence
+runner.setupSequence("path/to/sequence.yaml");
+
+// Setup geometry
+double angle = 0.01;  // degrees per micrometer in axis Y
+bool shift_block = false;
+Eigen::VectorXd voxel(6);
+voxel << min_x, max_x, min_y, max_y, min_z, max_z;
+Eigen::VectorXd block_size(3);
+block_size << dx, dy, dz;
+
+// Option 1: MAT file geometry
+runner.setupGeometryMatfile(angle, shift_block, "path/to/geometry.mat", voxel, block_size);
+
+// Option 2: OFF file geometry
+std::vector<std::string> geometry_paths = {"path/to/geometry1.off", "path/to/geometry2.off"};
+runner.setupGeometryOffFiles(angle, shift_block, geometry_paths, voxel, block_size);
+
+// Run simulation
+parameters params;
+params.isOutput = false;     // Save particle positions at each time step
+params.kappa = 0.0;          // Membrane permeability
+params.D_ecs = 2.5;          // Extracellular diffusivity (μm²/ms)
+params.D_ics = 1.0;          // Intracellular diffusivity (μm²/ms)
+params.cores = 64;           // Number of CPU cores to use
+params.isDeformed = false;   // Apply strain deformation
+params.strain_step_size = 100; // Time step for strain updates (ms)
+
+runner.runSimulation(params, "output_filename");
+```
+
+## Output
+
+The simulation produces CSV files containing:
+- Initial particle positions (`output_filename_init.csv`)
+- Final particle positions (`output_filename_final.csv`)
+
 ## Code Structure
 
 The codebase is organized into several main components:
 
-- **MonteCarlo/**: Core simulation classes
-  - `simulation.h/cpp`: Main simulation engine
-  - `walkers.h/cpp`: Particle management and tracking
-  
-- **Substrate/**: Tissue environment definitions
-  - `substrate.h/cpp`: Substrate geometry and properties
-  - `transform.h/cpp`: Transformation and strain handling
-  - `utility_substrate.h/cpp`: Utility functions for substrate operations
-  
-- **Geometry/**: Geometric primitives and operations
-  - `polyhedronSet.h/cpp`: Collection of 3D shapes for strain transformation
-  
-- **MRI/**: MRI sequence related code
-  - `sequence.h/cpp`: Pulse sequence definitions
+- **MonteCarlo/**: Core simulation engine and particle tracking
+- **Substrate/**: Tissue environment definitions and geometry handling
+- **Geometry/**: Geometric primitives and operations for tissue modeling
+- **MRI/**: MRI sequence parameters and pulse definitions
 
-- **run_sim.cpp**: Main entry point that orchestrates the simulation
-
-## Building and Requirements
-
-### Dependencies
+## Dependencies
 
 - Eigen (linear algebra)
 - CGAL (computational geometry)
@@ -44,116 +127,26 @@ The codebase is organized into several main components:
 - yaml-cpp (configuration parsing)
 - OpenMP (parallelization)
 
-### Build Instructions
+All dependencies are automatically installed when using Docker.
 
-```bash
-mkdir build
-cd build
-cmake ..
-make
-```
+## Advanced Configuration
 
-## Usage
+For advanced users who need to modify the simulation settings beyond the parameters provided by SimulationRunner:
 
-The simulation accepts the following command-line arguments:
+### Geometry Configuration
 
-```bash
-./run_sim <state> <ecv> <strain_flag> <kappa_index> <seed>
-```
+- **Block geometry**: Represents cardiac muscle cells (myocytes)
+- **Voxel definition**: Represents the MRI imaging volume with buffer zones for diffusing particles
+- **Strain function**: Models tissue deformation during cardiac cycles
 
-Where:
-- `state`: Tissue state ("relaxed" or "compressed")
-- `ecv`: Extracellular volume fraction
-- `strain_flag`: Whether to apply strain (0 for no, 1 for yes)
-- `kappa_index`: Index for permeability value (kappa) from the predefined list
-- `seed`: Random seed for the simulation
+### Simulation Parameters
 
-## Example
+Key parameters that can be adjusted include:
+- `kappa`: Membrane permeability (0 = impermeable, higher values = more permeable)
+- `D_ecs`: Extracellular diffusivity (μm²/ms)
+- `D_ics`: Intracellular diffusivity (μm²/ms)
+- `cores`: Number of CPU cores to use
+- `isDeformed`: Whether to apply strain deformation
+- `strain_step_size`: Time step for strain updates (ms)
 
-```bash
-./run_sim relaxed 0.2 1 5 42
-```
-
-This runs a simulation with:
-- Relaxed tissue state
-- 20% extracellular volume
-- With strain applied
-- Permeability index 5 (corresponding to kappa = 1.0)
-- Random seed 42
-
-## Output
-
-The simulation produces CSV files containing:
-- Initial particle positions
-- Final particle positions
-- Diffusion signal data
-
-Output filenames include the simulation parameters for easy identification.
-
-## Geometric Representation
-
-The simulation uses a sophisticated geometry system to model tissue microstructure and particle movement:
-
-### Block Geometry
-
-The block geometry represents the cardiac muscle cells (myocytes):
-
-- **Myocyte Representation**:
-  - Each myocyte is modeled as a rectangular cuboid with dimensions (dx, dy, dz)
-  - Different dimensions are used based on physiological state:
-    - Compressed: (31.65, 58.14, 91.84) μm
-    - Relaxed: (28.66, 52.66, 112) μm
-
-- **polyhedronSet Class**:
-  - Manages collections of 3D shapes that form the tissue structure
-  - Stores the geometry at different time points during deformation
-  - Based on CGAL triangulations for efficient geometric operations
-
-- **Tissue Geometry Loading**:
-  - OFF files (Object File Format) define the 3D tissue geometry
-  - Multiple cuboids are combined to create the complete tissue structure
-  - Different geometries are provided for various extracellular volume fractions (ECV)
-
-### Voxel Definition
-
-The voxel represents the MRI imaging volume:
-
-- **Structure**:
-  - Defined by 6 coordinates: [minX, maxX, minY, maxY, minZ, maxZ]
-  - Default size covers 0 to 2800 μm in each dimension
-
-- **Buffer Zone**:
-  - The voxel includes a buffer zone to capture diffusing particles
-  - Calculated as sqrt(6 × D × T) where:
-    - D is the diffusion coefficient (2.5 μm²/ms)
-    - T is the total simulation time
-  - Ensures accurate representation of diffusion effects at boundaries
-
-### Coordinate Systems
-
-The simulation uses multiple coordinate systems for accurate modeling:
-
-- **Global Coordinates**: Position in the entire simulation space
-- **Local Coordinates**: Position relative to a specific myocyte
-- **Deformed Coordinates**: Positions accounting for tissue strain
-
-The `transform` class handles conversions between these coordinate systems and applies strain-induced deformations to the geometry.
-
-### Particle-Geometry Interaction
-
-- **Compartment Detection**:
-  - The simulation tracks whether particles are in intracellular or extracellular space
-  - Uses spatial indexing for efficient compartment determination
-
-- **Membrane Interaction**:
-  - When particles encounter cell membranes, permeability (kappa) determines crossing probability
-  - Permeability values range from 0 (impermeable) to 100,000 μm/s (highly permeable)
-  - Particles may reflect off membranes or cross them based on probabilistic rules
-
-- **Strain Effects**:
-  - For cardiac motion simulations, geometry deforms over time
-  - Precomputed geometric configurations are used at different time points
-  - Strain functions model different cardiac states:
-    - End-systolic strain (compression)
-    - End-diastolic strain (relaxation)
-    - Sinusoidal strain (cyclic contraction)
+For more detailed configuration options, please refer to the source code documentation.
