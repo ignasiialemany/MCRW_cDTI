@@ -36,7 +36,7 @@ docker build -t mcrw .
 
 ```bash
 # Run the container with mounted volume for simulation
-docker run -it --name mcrw-simulation-container -v $(pwd):/app mcrw
+docker run -it --rm -v $(pwd):/app mcrw
 ```
 
 Inside this terminal, you'll compile and run the simulation:
