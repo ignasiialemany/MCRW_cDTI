@@ -19,13 +19,12 @@
 #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Bounded_normal_change_filter.h>
 #include <CGAL/Surface_mesh_simplification/Policies/Edge_collapse/Edge_length_cost.h>
 #include <CGAL/Surface_mesh.h>
-#include <CGAL/Polygon_mesh_processing/angle_and_area_smoothing.h>
-#include <CGAL/Polygon_mesh_processing/detect_features.h>
-#include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
+//#include <CGAL/Polygon_mesh_processing/angle_and_area_smoothing.h>
+//#include <CGAL/Polygon_mesh_processing/detect_features.h>
+//#include <CGAL/Polygon_mesh_processing/IO/polygon_mesh_io.h>
 // #include <CGAL/Polygon_mesh_processing/smooth_mesh.h>
-#include <CGAL/Polygon_mesh_processing/angle_and_area_smoothing.h>
-#include <CGAL/Polygon_mesh_processing/smooth_shape.h>
-#include <CGAL/Named_function_parameters.h>
+//#include <CGAL/Polygon_mesh_processing/smooth_shape.h>
+//#include <CGAL/Named_function_parameters.h>
 #include <functional>
 #include <chrono>
 #include <limits>

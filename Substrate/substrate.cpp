@@ -348,24 +348,25 @@ void substrate::preComputeSubstrate(Eigen::VectorXd strain_array_time_dts)
 
     strain_array_time = cumsum;
 
-    std::cout << "Strain array time: " << strain_array_time << std::endl;
+    //std::cout << "Strain array time: " << strain_array_time << std::endl;
     //Compute centroid of transform block
 
     for (int i = 0; i < strain_array_time.size(); ++i) {
         strain_array_value(i) = _strain(strain_array_time(i));
     }
 
-    std::cout << "Strain array value: " << strain_array_value << std::endl;
+    //std::cout << "Strain array value: " << strain_array_value << std::endl;
 
     Eigen::Vector3d centroid = _transform.get_block_centroid();
 
 
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
     
-    #pragma omp parallel num_threads(64) shared(centroid,strain_array_time_dts,_strain)
+    #pragma omp parallel num_threads(omp_get_max_threads()) shared(centroid,strain_array_time_dts,_strain)
     {
         #pragma omp master // This block will be executed by only one thread (the master)
         {
+            std::cout << "Precomputing substrate for " << _myocytes.size() << " cells " << "with " << strain_array_time_dts.size() << " time steps" << std::endl;
             std::cout << "OpenMP is enabled. Number of threads: " << omp_get_num_threads() << std::endl;
             std::cout << "OpenMP version: " << _OPENMP << std::endl;
         }
@@ -376,9 +377,9 @@ void substrate::preComputeSubstrate(Eigen::VectorXd strain_array_time_dts)
         }
     }
 
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-    std::cout << "Time taken by function: " << duration.count() << " milliseconds" << std::endl;
+    //auto stop = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    //std::cout << "Time taken by function: " << duration.count() << " milliseconds" << std::endl;
 
 
 
@@ -394,7 +395,7 @@ void substrate::preComputeSubstrate(Eigen::VectorXd strain_array_time_dts)
 
         for (int j=0; j<_myocytes.size(); ++j){
             Eigen::Vector3d centroid = _myocytes[j].getPolygon(i).getCentroid();
-            Kernel::Point_3 centroid_cgal(centroid(0), centroid(1), centroid(2));
+            Kernel::Point_3 centroid_cgal(centroid(0), centroid(1), 0.0);
             _vector_points[i].emplace_back(centroid_cgal);
             _vector_map_centroid_to_polygon[i][centroid_cgal] = j;
         }

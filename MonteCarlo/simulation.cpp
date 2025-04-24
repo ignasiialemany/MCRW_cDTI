@@ -212,9 +212,6 @@ if (params.isOutput)
     
     for (int i = 0; i < sequence.dt.size(); i++)
     {
-        if (i==4825){
-            double xcfasio = 4;
-        }
         // Get dT and dG values
         double dt_magnitude = sequence.dt(i);
         double dG_magnitude = sequence.gG(i);
@@ -397,18 +394,18 @@ void simulation::one_dt(Particle &particle, const substrate &substrate, URNG &rn
         Eigen::Vector3d remaining_step;
 
         D_coeff_old = D_coeff_new;
-
+        auto index_polygon = substrate.searchPolygon(local_position, index_sequence);
         //Update D_coeff_old as expected
         if (particle.myocyte_index!=-1){
-            if (substrate.searchPolygon(local_position, index_sequence)==-1){
-                throw std::logic_error("NOPE beginning");
+            if (index_polygon==-1){
+                throw std::logic_error("FLAGGED - ICS to ECS");
                D_coeff_old = params.D_ecs;
             }
             D_coeff_old = params.D_ics;
         }
         else{
-            if (substrate.searchPolygon(local_position, index_sequence)!=-1){
-                throw std::logic_error("NOPE beginning");
+            if (index_polygon!=-1){
+                throw std::logic_error("FLAGGED - ECS to ICS");
                 D_coeff_old = params.D_ics;
             }
             D_coeff_old = params.D_ecs;
@@ -417,9 +414,9 @@ void simulation::one_dt(Particle &particle, const substrate &substrate, URNG &rn
 
         counter++;
         //  Throw logic_error if we we try to intersect more than 50 times
-        if (counter > 100)
+        if (counter > 50)
         {
-            throw std::logic_error("Stepping error, stopped while loop in one_dt after trying 50 times");
+            throw std::logic_error("FLAGGED - Stepping error, stopped while loop in one_dt after trying 50 times");
         }
         
         // Get intersection data
@@ -577,43 +574,10 @@ void simulation::one_dt(Particle &particle, const substrate &substrate, URNG &rn
             }
         }
         local_step = remaining_step;
-
-
-        //Update D_coeff_old as expected
-        if (particle.myocyte_index!=-1){
-            if (substrate.searchPolygon(local_position, index_sequence)==-1){
-                std::cout << "crossed ICS to ECS when it shouldnt :" << particle.index << std::endl;
-                throw std::logic_error("NOPE");
-                substrate.searchPolygon(local_position, index_sequence);
-                D_coeff_old = params.D_ics;
-            }
-            D_coeff_old = params.D_ics;
-        }
-        else{
-            if (substrate.searchPolygon(local_position, index_sequence)!=-1){
-                std::cout << "crossed ECS to ICS when it shouldnt :" << particle.index << std::endl;
-                throw std::logic_error("NOPE");
-                D_coeff_old = params.D_ics;
-            }
-            D_coeff_old = params.D_ecs;
-        }
-
         //Transform local_step and local_position to step and particle.position back again
         step = utility_substrate::rotate_y(local_step, transform_data.angle);
         particle.position = substrate.getGlobalFromLocal(local_position, transform_data.iX, transform_data.iY, transform_data.iZ, strain_z);
     }
-
-    /*if (substrate.searchPolygon(local_position, index_sequence)!=-1){
-                int poly = substrate.searchPolygon(local_position, index_sequence);
-                substrate.searchPolygon(local_position, index_sequence);
-                D_coeff_old = params.D_ics;
-    } 
-    */
-
-    // Update particle position
-    //Eigen::Vector3d next_global_position = substrate.getGlobalFromLocal(local_position, transform_data.iX, transform_data.iY, transform_data.iZ,strain_z);
-
-    //particle.position = next_global_position;
 }
 
 template void simulation::one_dt<oneGenerator>(Particle &particle, const substrate &substrate, oneGenerator &rng_engine, double dt, int index_sequence, double total_time);

@@ -24,6 +24,7 @@ struct parameters
     double kappa = 0.05;
     bool isOutput = false;
     bool isDeformed = false;
+    double strain_step_size = 100.;
 };
 
 class simulation

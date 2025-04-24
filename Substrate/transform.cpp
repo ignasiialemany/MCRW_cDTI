@@ -254,10 +254,6 @@ void transform::set_block(double dx, double dy, double dz, double minY, double m
     this->y_slice_minmax.row(0) = y_minvals.segment(0, y_minvals.size() - 1);
     this->y_slice_minmax.row(1) = y_minvals.tail(y_minvals.size() - 1);
 
-
-    std::cout << "y_slice_minmax" << std::endl;
-    std::cout << y_slice_minmax << std::endl;
-
     std::unordered_set<double> x_minvals_set;
     for (double x = 0.0; x <= maxX; x += dx)
     {

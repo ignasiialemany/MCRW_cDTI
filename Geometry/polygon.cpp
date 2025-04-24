@@ -82,7 +82,7 @@ polygon::polygon(const polygon& other)
       mesh(other.mesh), _vertices(other._vertices), _faces(other._faces),
       centroid(other.centroid),_side_of_triangle_mesh(other._poly,Kernel())
 {
-    double xafsdf=2343;
+    //double xafsdf=2343;
     // If you have dynamically allocated resources (e.g., pointers), you should copy them here.
     // For example, if you have a dynamically allocated array:
     // _someData = new SomeType[other.size];

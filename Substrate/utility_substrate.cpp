@@ -158,6 +158,8 @@ double utility_substrate::find_yslice(double y_global, const Eigen::MatrixXd &y_
     // Lost particle (Does not happen very often)
     if (!found)
     {
+        std::cout << "y_global: " << y_global << std::endl;
+        std::cout << "y_slice_minmax: " << y_slice_minmax << std::endl;
         throw std::logic_error("Transform::find_yslice::where', 'Corresponding slice not found'");
     }
     return -1;
@@ -179,6 +181,8 @@ int utility_substrate::find_index_slice(double y_global, const Eigen::MatrixXd &
     // Lost particle (Does not happen very often)
     if (!found)
     {
+        std::cout << "y_global: " << y_global << std::endl;
+        std::cout << "y_slice_minmax: " << y_slice_minmax << std::endl;
         throw std::logic_error("Transform::find_yslice::where', 'Corresponding slice not found'");
     }
     return -1;
