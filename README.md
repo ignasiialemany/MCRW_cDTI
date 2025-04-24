@@ -23,8 +23,8 @@ Open your first terminal:
 
 ```bash
 # Clone the repository (if you haven't already)
-git clone https://github.com/yourusername/MCRW-Simulation.git
-cd MCRW-Simulation
+git clone https://github.com/ignasiialemany/MCRW_cDTI.git
+cd MCRW_cDTI
 
 # Build the Docker image
 docker build -t mcrw .
@@ -148,5 +148,3 @@ Key parameters that can be adjusted include:
 - `cores`: Number of CPU cores to use
 - `isDeformed`: Whether to apply strain deformation
 - `strain_step_size`: Time step for strain updates (ms)
-
-For more detailed configuration options, please refer to the source code documentation.
