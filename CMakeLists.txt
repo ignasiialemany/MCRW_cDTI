@@ -4,6 +4,8 @@ set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 set(CMAKE_CXX_STANDARD 14)
 project(3DRandomWalk)
 
+# If you need to debug, set CMAKE_BUILD_TYPE to "Debug" and optimize to "-O0" and run locally without Docker. You will have to install dependencies 
+# through anaconda or directly in the system.
 set(CMAKE_BUILD_TYPE "Release")
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Choose your desired optimization level and floating-point settings
@@ -15,22 +17,20 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${OPTIMIZATION_LEVEL} ${FP_CONSISTENCY_FLAGS}")
 endif()
 
-#add_subdirectory(third_party/yaml-cpp)
-#add_subdirectory(third_party/Catch2-3.3.1)
-#add_subdirectory(third_party/matio-cpp-master)
 
-# Set the name of the conda environment containing the required packages
-set(CONDA_ENV_NAME "randomwalk")
+#IF YOU USE ANACONDA ENV uncomment the following lines:
+    # set(CONDA_ENV_NAME "randomwalk")
 
-# Set the paths to the conda environment
-set(CONDA_PREFIX "~/anaconda3/envs/${CONDA_ENV_NAME}")
-set(CONDA_INCLUDE_DIR "${CONDA_PREFIX}/include")
-set(CONDA_LIBRARY_DIR "${CONDA_PREFIX}/lib")
+    # # Set the paths to the conda environment
+    # set(CONDA_PREFIX "~/anaconda3/envs/${CONDA_ENV_NAME}")
+    # set(CONDA_INCLUDE_DIR "${CONDA_PREFIX}/include")
+    # set(CONDA_LIBRARY_DIR "${CONDA_PREFIX}/lib")
 
-#set(Eigen3_DIR "${CONDA_PREFIX}/share/eigen3/cmake")
-set(CMAKE_PREFIX_PATH ${CONDA_PREFIX} ${CMAKE_PREFIX_PATH})
+    # #set(Eigen3_DIR "${CONDA_PREFIX}/share/eigen3/cmake")
+    # set(CMAKE_PREFIX_PATH ${CONDA_PREFIX} ${CMAKE_PREFIX_PATH})
+
+
 set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${CMAKE_CURRENT_SOURCE_DIR}/third_party/yaml-cpp")
-
 
 find_package(Eigen3 3.3 REQUIRED)
 message(STATUS "Eigen3 found at: ${Eigen3_DIR}")
@@ -62,8 +62,8 @@ set(UTILITY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Utility")
 include_directories(${CERES_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/yaml-cpp/include)
 
-file(GLOB_RECURSE SOURCES "${GEOMETRY_DIR}/*.cpp" "${SUBSTRATE_DIR}/*.cpp" "${MONTECARLO_DIR}/*.cpp" "${MRI_DIR}/*.cpp" "${UTILITY_DIR}/*.cpp")
-file(GLOB_RECURSE HEADERS "${GEOMETRY_DIR}/*.h" "${SUBSTRATE_DIR}/*.h" "${MONTECARLO_DIR}/*.h" "${MRI_DIR}/*.h" "${UTILITY_DIR}/*.h")
+file(GLOB_RECURSE SOURCES "${GEOMETRY_DIR}/*.cpp" "${SUBSTRATE_DIR}/*.cpp" "${MONTECARLO_DIR}/*.cpp" "${MRI_DIR}/*.cpp" "${UTILITY_DIR}/*.cpp" "SimulationRunner.cpp")
+file(GLOB_RECURSE HEADERS "${GEOMETRY_DIR}/*.h" "${SUBSTRATE_DIR}/*.h" "${MONTECARLO_DIR}/*.h" "${MRI_DIR}/*.h" "${UTILITY_DIR}/*.h" "SimulationRunner.h")
 
 # Add the source files for your project
 #add_executable(myTests testing/oneGenerator.h testing/testing_simulation.cpp testing/testing_sequence.cpp testing/testing_polygon.cpp testing/testing_substrate.cpp ${SOURCES} ${HEADERS})
