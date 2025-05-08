@@ -49,5 +49,17 @@ RUN git clone https://github.com/catchorg/Catch2.git \
 # Update library path
 RUN ldconfig
 
+# Create app directory and set it as the working directory
 WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app/
+
+# Create build directory and compile the project
+RUN rm -rf /app/build/Release && mkdir -p /app/build/Release && \
+    cd /app/build/Release && \
+    cmake ../.. && \
+    make -j12
+
+# Set the default command
 CMD ["/bin/bash"]
