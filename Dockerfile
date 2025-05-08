@@ -59,7 +59,7 @@ COPY . /app/
 RUN rm -rf /app/build/Release && mkdir -p /app/build/Release && \
     cd /app/build/Release && \
     cmake ../.. && \
-    make -j12
+    make
 
 # Set the default command
 CMD ["/bin/bash"]
