@@ -13,13 +13,42 @@ This software simulates water diffusion in complex tissue environments using a M
 
 The simulation generates realistic diffusion MRI signals by tracking the phase accumulation of particles as they diffuse through the substrate during an MRI sequence.
 
-## Quick Start with Docker
+## Running the Simulation
 
-The simulation can be run easily using Docker, which handles all dependencies automatically. For some operations, you may need to use two terminals.
+There are three different ways to run this simulation code, depending on your needs:
 
-### Step 1: Build the Docker Image
+### 1. Local Installation (for Development)
 
-Open your first terminal:
+If you're actively developing the code, you can install all dependencies locally:
+
+1. **Install Dependencies**: 
+   - Install Anaconda or Miniconda first
+   - Required packages: Eigen3, CGAL, Boost, yaml-cpp, OpenMP, Ceres, matioCpp, Catch2
+
+2. **Configure CMake**:
+   - Open `CMakeLists.txt` and uncomment the Anaconda environment configuration section:
+   ```cmake
+   # Uncomment these lines:
+   set(CONDA_ENV_NAME "randomwalk")
+   set(CONDA_PREFIX "~/anaconda3/envs/${CONDA_ENV_NAME}")
+   set(CONDA_INCLUDE_DIR "${CONDA_PREFIX}/include")
+   set(CONDA_LIBRARY_DIR "${CONDA_PREFIX}/lib")
+   set(CMAKE_PREFIX_PATH ${CONDA_PREFIX} ${CMAKE_PREFIX_PATH})
+   ```
+
+3. **Build and Run**:
+   ```bash
+   mkdir -p build/Release && cd build/Release
+   cmake ../..
+   make -j$(nproc)
+   ./3DRandomwalk
+   ```
+
+> **Note**: This setup process can be complex and may require adjustments based on your operating system and local environment.
+
+### 2. Docker Container (Recommended for Most Users)
+
+Docker handles all dependencies automatically, making it the easiest way to run the simulation:
 
 ```bash
 # Clone the repository (if you haven't already)
@@ -28,32 +57,50 @@ cd MCRW_cDTI
 
 # Build the Docker image
 docker build -t mcrw .
+
+# Run the container with mounted volume
+docker run -it -v $(pwd):/app mcrw
 ```
 
-### Step 2: Run the Container in Two Terminals
-
-#### Terminal 1: Run the Simulation Container
+Once inside the container, you can run the simulation:
 
 ```bash
-# Run the container with mounted volume for simulation
-docker run -it --rm -v $(pwd):/app mcrw
+# Navigate to the executable
+cd /app/build/Release
+
+# Run the simulation with parameters
+./3DRandomwalk --kappa 0.01 --strain-type diastolic
 ```
 
-Inside this terminal, you'll compile and run the simulation:
+All your files in the host directory are synchronized with the `/app` directory in the container, so simulation outputs will be available on your local machine.
 
-```bash
-# Create build directory
-mkdir -p build/Release && cd build/Release
+### 3. High-Performance Computing (HPC)
 
-# Configure with CMake
-cmake ../..
+For running simulations on an HPC cluster:
 
-# Compile
-make -j$(nproc)
+1. **Setup Directory Structure**:
+   Create and navigate to a directory structure like:
+   ```
+   root/
+   ├── build/
+   │   └── Release/
+   ├── sequence.yaml
+   └── geometry_1.mat
+   ```
 
-# Run the simulation
-./3DRandomwalk
-```
+2. **Pull Singularity Image**:
+   Inside the `root/build/Release` directory:
+   ```bash
+   singularity pull simulation.sif docker://ignasiialemany/mcrw-cdti:latest
+   ```
+
+3. **Run the HPC Script**:
+   Copy the `scripts/hpc_example.sh` script to your HPC system and submit it using your cluster's job scheduler:
+   ```bash
+   qsub hpc_example.sh
+   ```
+
+The script will run the simulation using the Singularity container, with output files generated in the `root/build/Release` directory.
 
 ## Using the SimulationRunner Class
 
@@ -104,20 +151,33 @@ params.strain_step_size = 100; // Time step for strain updates (ms)
 runner.runSimulation(params, "output_filename");
 ```
 
+## Command Line Arguments
+
+The simulation supports various command line arguments:
+
+```
+Options:
+  --kappa VALUE             Set kappa value (default: 0.0)
+  --seed VALUE              Set random seed (default: 1)
+  --particles N             Set number of particles (default: 10000)
+  --strain-type TYPE        Set strain type: diastolic, systolic, no_strain (default: diastolic)
+  --angle VALUE             Set angle in degrees per micrometer (default: 0.01)
+  --shift-block BOOL        Enable/disable shift block: true, false (default: false)
+  --Decs VALUE              Set diffusivity of ECS (default: 2.5)
+  --Dics VALUE              Set diffusivity of ICS (default: 1.0)
+  --cores N                 Set number of cores (default: 64)
+  --deformed BOOL           Enable/disable deformation: true, false (default: true)
+  --strain-step-size VALUE  Set strain step size in ms (default: 100)
+  --job-id ID               Job array ID for output naming
+  --sequence-file PATH      Path to sequence file (default: [root_dir]/sequence.yaml)
+  --geometry-file PATH      Path to geometry file (default: [root_dir]/geometry_1.mat)
+```
+
 ## Output
 
 The simulation produces CSV files containing:
 - Initial particle positions (`output_filename_init.csv`)
 - Final particle positions (`output_filename_final.csv`)
-
-## Code Structure
-
-The codebase is organized into several main components:
-
-- **MonteCarlo/**: Core simulation engine and particle tracking
-- **Substrate/**: Tissue environment definitions and geometry handling
-- **Geometry/**: Geometric primitives and operations for tissue modeling
-- **MRI/**: MRI sequence parameters and pulse definitions
 
 ## Dependencies
 
@@ -126,25 +186,7 @@ The codebase is organized into several main components:
 - Boost (filesystem, etc.)
 - yaml-cpp (configuration parsing)
 - OpenMP (parallelization)
+- matioCpp (MAT-file handling)
+- Ceres (optimization)
 
-All dependencies are automatically installed when using Docker.
-
-## Advanced Configuration
-
-For advanced users who need to modify the simulation settings beyond the parameters provided by SimulationRunner:
-
-### Geometry Configuration
-
-- **Block geometry**: Represents cardiac muscle cells (myocytes)
-- **Voxel definition**: Represents the MRI imaging volume with buffer zones for diffusing particles
-- **Strain function**: Models tissue deformation during cardiac cycles
-
-### Simulation Parameters
-
-Key parameters that can be adjusted include:
-- `kappa`: Membrane permeability (0 = impermeable, higher values = more permeable)
-- `D_ecs`: Extracellular diffusivity (μm²/ms)
-- `D_ics`: Intracellular diffusivity (μm²/ms)
-- `cores`: Number of CPU cores to use
-- `isDeformed`: Whether to apply strain deformation
-- `strain_step_size`: Time step for strain updates (ms)
+All dependencies are automatically installed when using Docker or Singularity.
