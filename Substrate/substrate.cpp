@@ -362,7 +362,7 @@ void substrate::preComputeSubstrate(Eigen::VectorXd strain_array_time_dts)
 
     //auto start = std::chrono::high_resolution_clock::now();
     //TODO: Move number of threads as input to the script , for now we hardcode it to 2
-    #pragma omp parallel num_threads(2) shared(centroid,strain_array_time_dts,_strain)
+    #pragma omp parallel num_threads(1) shared(centroid,strain_array_time_dts,_strain)
     {
         #pragma omp master // This block will be executed by only one thread (the master)
         {
@@ -371,6 +371,7 @@ void substrate::preComputeSubstrate(Eigen::VectorXd strain_array_time_dts)
             std::cout << "OpenMP version: " << _OPENMP << std::endl;
         }
         
+        //TODO: static
         #pragma omp for schedule(static)
         for (int i = 0; i < _myocytes.size(); ++i) {
             _myocytes[i].precomputePolygons(centroid, strain_array_time_dts, _strain);
