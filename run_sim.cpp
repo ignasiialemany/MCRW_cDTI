@@ -8,8 +8,35 @@ int main(int argc, char* argv[]) {
     int SEED = 1;
     int N_PARTICLES = 10000;
 
-    std::function<double(double)> strain_function = [](double t) { return 0.0; };
-    auto runner = SimulationRunner(N_PARTICLES, SEED, strain_function);
+    std::function<double(double)> end_diastolic_strain = [](double t){
+        double result;
+        if (t <= 300) {
+            result = -0.15 * sin(2 * M_PI * t * 1 / 1200);
+        } else if (t > 300 && t <= 800) {
+            result = -0.15 * sin(2 * M_PI * (t + 200) * 1 / 2000);
+        } else {
+            result = 0.;
+        }
+        
+        double scale = 10000; // Scale for 4 decimal places
+        return std::round(result * scale) / scale;
+    };
+
+    std::function<double(double)> end_systolic_strain = [](double t){
+        double result;
+        if (t < 500) {
+            result = (1/0.85-1) * (1 - sin(2*M_PI*(t+500)*1/2000));
+        }
+        else if (t>=500 and t<700) {
+            result = (1/0.85-1);
+        } else{
+            result = (1/0.85-1) * (1 - sin(2*M_PI*(t-700)*1/1200));
+        }
+        double scale = 10000; // Scale for 4 decimal places
+        return std::round(result * scale) / scale;
+    };
+   
+    auto runner = SimulationRunner(N_PARTICLES, SEED, end_diastolic_strain);
 
     boost::filesystem::path executable_path = boost::filesystem::current_path();
     boost::filesystem::path root_dir = executable_path.parent_path().parent_path();
@@ -65,7 +92,7 @@ int main(int argc, char* argv[]) {
     //Number of cores for the simulation
     params.cores = 64;
     //Set to false if there is no strain (faster no need to store deformed geometries)
-    params.isDeformed = false;
+    params.isDeformed = true;
     //Strain step size in ms
     params.strain_step_size = 100;
 

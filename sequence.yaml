@@ -52,10 +52,10 @@ sequence:
 
   gamma: 267.5e-6  # rad/ms/mT (it contains 10^-6 because the gradient is in mT/m and positions in um)
 
-  # number of time steps
+  # number of time steps - if dt_max is specified N_t is overwritten to N_t = T//dt_max
   N_t: 1000
 
-  # time step limit [dt_free, dt_grad]
+  # time step limit [dt_free, dt_grad] in ms
   dt_max:
     - 0.1 # during gradient-off (free)
     - 0.001 #
