@@ -361,8 +361,8 @@ void substrate::preComputeSubstrate(Eigen::VectorXd strain_array_time_dts)
 
 
     //auto start = std::chrono::high_resolution_clock::now();
-    
-    #pragma omp parallel num_threads(omp_get_max_threads()) shared(centroid,strain_array_time_dts,_strain)
+    //TODO: Move number of threads as input to the script , for now we hardcode it to 2
+    #pragma omp parallel num_threads(2) shared(centroid,strain_array_time_dts,_strain)
     {
         #pragma omp master // This block will be executed by only one thread (the master)
         {
