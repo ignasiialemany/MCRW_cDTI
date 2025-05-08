@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
     
     // Create output filename with job ID, kappa, and seed
     std::ostringstream output_filename;
-    output_filename << "sim_job" << job_id << "_" << strain_type << "_kappa" << kappa << "_seed" << SEED;
+    output_filename << "sim_job_" << job_id << "_" << strain_type << "_kappa_" << kappa;
     
     //Run simulation
     runner.runSimulation(params, output_filename.str());
